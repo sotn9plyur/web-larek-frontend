@@ -1,4 +1,4 @@
-# Проектная работа "Веб-ларек"
+Проектная работа "Веб-ларек"
 
 Стек: HTML, SCSS, TS, Webpack
 
@@ -43,217 +43,204 @@ yarn build
 
 
 Архитектура проекта
+Проект построен на паттерне MVP:
 
-Проект построен по архитектурному паттерну MVP:
+Model — отвечает за данные и их изменение: хранение, получение, обновление, удаление
 
--Model — отвечает за хранение и управление данными (классы Model и AppState);
+View — отображает интерфейс, реагирует на действия пользователя
 
--View — представляет пользовательский интерфейс (классы Card, Component, Order, Form, Basket, Page);
+Presenter — связывает Model и View, управляет логикой и обработкой событий
 
--Presenter — обеспечивает связь между моделью и представлением.
+Об архитектуре и взаимодействии
+Основой взаимодействия компонентов служит событийная модель
+Model инициирует события, Presenter (главный управляющий) — слушает их, обрабатывает данные и передает их во View, а также в обратную сторону — от View к Model через Presenter
 
-Принципы взаимодействия
-Коммуникация между компонентами реализована через событийную модель. Компоненты инициируют события, а подписчики обрабатывают их, передают данные, выполняют вычисления и обновляют состояние моделей. Это обеспечивает слабую связанность компонентов и расширяемость проекта.
-
-Ключевые компоненты
+Базовые классы и структура
 EventEmitter
-Класс реализует брокер событий, обеспечивая подписку и обработку событий в приложении.
-
-Конструктор
-Создает хранилище для подписчиков событий.
+Брокер событий, позволяющий подписываться и инициировать события
 
 Методы:
 
--on(event, handler) — подписка на событие;
+on(event, callback) — подписка на событие;
 
--off(event, handler) — отписка от события;
+off(event, callback) — отписка от события;
 
--onAll(handler) — подписка на все события;
+onAll(callback) — подписка на все события;
 
--offAll() — отписка от всех событий;
+offAll(callback) — снятие подписки со всех событий;
 
--emit(event, data) — генерация события;
+emit(event, data) — вызов события с передачей данных;
 
--trigger(event, callback) — установка триггера-события.
+trigger(event, callback) — устанавливает callback, создающий событие
 
 API
-Обеспечивает взаимодействие с серверной частью.
+Базовый класс для работы с сервером
 
 Конструктор:
 
--baseUrl: string — базовый URL сервера;
+baseUrl: string
 
--options: RequestInit — настройки запроса.
+options: RequestInit = {}
 
 Методы:
 
--get(endpoint) — выполнение GET-запроса;
+get(endpoint: string) — GET-запрос;
 
--post(endpoint, data) — выполнение POST-запроса;
+post(endpoint: string, data: any) — POST-запрос;
 
--handleResponse(response) — обработка ответа и ошибок.
+handleResponse(response) — обработка ответа сервера с учетом ошибок
 
-Model
-Универсальный класс модели данных. Поддерживает генерацию событий при изменении состояния.
+Model<T>
+Управляет данными и взаимодействует с EventEmitter
 
 Конструктор:
 
--data: Partial<T> — данные модели;
+data: Partial<T>
 
--events: IEvents — объект для взаимодействия через события.
-
-Метод:
-
--emitChanges(event, data) — оповещение о изменениях.
-
-AppState
-Центральная модель, управляющая данными каталога, корзиной, заказом и валидацией.
+events: IEvents
 
 Методы:
 
--setCatalog(data) — установка списка товаров;
+emitChanges(eventName: string, data?: any) — инициирует событие об изменении модели
 
--setPreview(productId) — установка товара для предпросмотра;
+AppState extends Model<IAppState>
+Центральное хранилище состояния
 
--addToBasket(productId) — добавление в корзину;
+Методы:
 
--removeToBasket(productId) — удаление из корзины;
+setCatalog(catalog: IProduct[])
 
--clearBasket() — очистка корзины;
+setPreview(productId: string)
 
--validateAddress(data) — валидация адреса;
+addToBasket(productId: string)
 
--validateContacts(data) — валидация контактов;
+removeFromBasket(productId: string)
 
--getTotal() — расчет общей стоимости заказа.
+clearBasket()
 
-Компоненты View
+validateAddress(address: string): boolean
+
+validateContacts(email: string, phone: string): boolean
+
+getTotal(): number
+
+Компоненты интерфейса (View)
 Component
-Базовый UI-компонент для работы с DOM.
+Базовый UI-класс
 
 Конструктор:
 
--container: HTMLElement — контейнер компонента.
+container: HTMLElement
 
 Методы:
 
--toggleClass(name, force) — добавление/удаление класса;
+toggleClass(className: string, force?: boolean)
 
--setImage(src, alt) — установка изображения;
+setImage(src: string, alt: string)
 
--setVisible() / setHidden() — управление видимостью;
+setVisible(), setHidden()
 
--setDisabled(flag) — управление доступностью;
+setDisabled(isDisabled: boolean)
 
--render(data?) — отрисовка содержимого.
+render(data?: Partial<T>)
 
-Card
-Представляет карточку товара.
-
-Наследует: Component.
-
-Сеттеры и геттеры:
-
-id, title, category, image, description, price, button, index.
+Card extends Component
+Карточка товара
 
 Конструктор:
 
--container: HTMLElement — контейнер карточки;
+container: HTMLElement
 
--actions?: ICardActions — объект с обработчиками событий.
+actions?: ICardActions
 
-Form
-Универсальный компонент формы, обрабатывает валидацию и ошибки.
+Сеттеры/геттеры:
 
-Наследует: Component.
+id, category, title, description, price, image, button, index
+
+Form extends Component
+Общая форма (наследуется Order)
 
 Конструктор:
 
--container: HTMLFormElement;
+container: HTMLFormElement
 
--events: IEvents.
+events: IEvents
 
 Методы:
 
--onInputChange() — обработка изменений;
+onInputChange(event: InputEvent)
 
--set valid — установка валидности;
+set valid: boolean
 
--set errors — вывод ошибок;
+set errors: Record<string, string>
 
--render() — перерисовка формы.
+render()
 
-Order
-Расширяет Form, содержит поля оплаты и контактной информации.
-
-Конструктор:
-
--container: HTMLElement;
-
--events: IEvents.
+Order extends Form
+Форма оформления заказа
 
 Методы:
 
--select paymentMethod — выбор метода оплаты;
+select paymentMethod(payment: TPayment)
 
--set address, phone, email — заполнение данных.
+set address(string)
 
-Basket
-Компонент отображения корзины.
+set phone(string)
 
-Наследует: Component.
+set email(string)
 
-Конструктор:
-
--container: HTMLElement;
-
--events: EventEmitter.
-
-Сеттеры:
-
--item — установка элементов;
-
--selected — управление отображением наличия;
-
--total — отображение общей суммы.
-
-Page
-Компонент главной страницы, управляет отображением каталога и корзины.
-
-Наследует: Component.
+Basket extends Component
+Отображает корзину
 
 Конструктор:
 
--container: HTMLElement;
+container: HTMLElement
 
--events: IEvents.
-
-Сеттеры:
-
--catalog — отрисовка карточек;
-
--counter — счетчик товаров в корзине;
-
--locked — блокировка прокрутки.
-
-Modal
-Отвечает за отображение модального окна.
-
-Наследует: Component.
-
-Конструктор:
-
--container: HTMLElement;
-
--events: IEvents.
+events: EventEmitter
 
 Методы:
 
--open() / close() — управление видимостью;
+set item(IProduct)
 
--set content — установка содержимого;
+set selected(boolean)
 
--render() — отрисовка модального окна.
+set total(number)
+
+Page extends Component
+Работает с главной страницей
+
+Конструктор:
+
+container: HTMLElement
+
+events: IEvents
+
+Методы:
+
+set catalog(IProduct[])
+
+set counter(number)
+
+set locked(boolean)
+
+Modal extends Component
+Модальное окно
+
+Конструктор:
+
+container: HTMLElement
+
+events: IEvents
+
+Методы:
+
+open()
+
+close()
+
+set content(HTMLElement)
+
+render()
 
 Типы данных
 ts
