@@ -1,4 +1,4 @@
-Проектная работа "Веб-ларек"
+# Проектная работа "Веб-ларек"
 
 Стек: HTML, SCSS, TS, Webpack
 
@@ -41,206 +41,236 @@ npm run build
 yarn build
 ```
 
-
+Проектная работа "Веб-ларек"
 Архитектура проекта
-Проект построен на паттерне MVP:
+Проект построен по архитектурному паттерну MVP:
 
-Model — отвечает за данные и их изменение: хранение, получение, обновление, удаление
+Model — отвечает за хранение и управление данными (классы Model и AppState);
 
-View — отображает интерфейс, реагирует на действия пользователя
+View — представляет пользовательский интерфейс (классы Card, Component, Order, Form, Basket, Page);
 
-Presenter — связывает Model и View, управляет логикой и обработкой событий
+Presenter — обеспечивает связь между моделью и представлением.
 
-Об архитектуре и взаимодействии
-Основой взаимодействия компонентов служит событийная модель
-Model инициирует события, Presenter (главный управляющий) — слушает их, обрабатывает данные и передает их во View, а также в обратную сторону — от View к Model через Presenter
+Принципы взаимодействия
+Коммуникация между компонентами реализована через событийную модель. Компоненты инициируют события, а подписчики обрабатывают их, передают данные, выполняют вычисления и обновляют состояние моделей. Это обеспечивает слабую связанность компонентов и расширяемость проекта.
 
-Базовые классы и структура
+Пользовательские события
+Связь между моделью и представлением осуществляется через EventEmitter, реализующий событийную модель. Ниже приведён перечень ключевых пользовательских событий, используемых в проекте:
+
+Событие	Назначение
+catalog:changed	Каталог обновлён
+preview:changed	Товар выбран для предпросмотра
+basket:changed	Содержимое корзины изменено
+basket:cleared	Корзина очищена
+basket:item-added	Товар добавлен в корзину
+basket:item-removed	Товар удалён из корзины
+order:submit	Отправка формы заказа
+order:completed	Заказ успешно оформлен
+order:failed	Ошибка при оформлении заказа
+form:address-changed	Изменён адрес доставки
+form:contacts-changed	Изменены контактные данные
+form:validation-error	Ошибка валидации формы
+modal:open	Открытие модального окна
+modal:close	Закрытие модального окна
+
+Ключевые компоненты
 EventEmitter
-Брокер событий, позволяющий подписываться и инициировать события
+Класс реализует брокер событий, обеспечивая подписку и обработку событий в приложении.
+
+Конструктор
+Создает хранилище для подписчиков событий.
 
 Методы:
 
-on(event, callback) — подписка на событие;
+on(event, handler) — подписка на событие;
 
-off(event, callback) — отписка от события;
+off(event, handler) — отписка от события;
 
-onAll(callback) — подписка на все события;
+onAll(handler) — подписка на все события;
 
-offAll(callback) — снятие подписки со всех событий;
+offAll() — отписка от всех событий;
 
-emit(event, data) — вызов события с передачей данных;
+emit(event, data) — генерация события;
 
-trigger(event, callback) — устанавливает callback, создающий событие
+trigger(event, callback) — установка триггера-события.
 
 API
-Базовый класс для работы с сервером
+Обеспечивает взаимодействие с серверной частью.
 
 Конструктор:
 
-baseUrl: string
+baseUrl: string — базовый URL сервера;
 
-options: RequestInit = {}
+options: RequestInit — настройки запроса.
 
 Методы:
 
-get(endpoint: string) — GET-запрос;
+get(endpoint) — выполнение GET-запроса;
 
-post(endpoint: string, data: any) — POST-запрос;
+post(endpoint, data) — выполнение POST-запроса;
 
-handleResponse(response) — обработка ответа сервера с учетом ошибок
+handleResponse(response) — обработка ответа и ошибок.
 
-Model<T>
-Управляет данными и взаимодействует с EventEmitter
+Model
+Универсальный класс модели данных. Поддерживает генерацию событий при изменении состояния.
 
 Конструктор:
 
-data: Partial<T>
+data: Partial<T> — данные модели;
 
-events: IEvents
+events: IEvents — объект для взаимодействия через события.
+
+Метод:
+
+emitChanges(event, data) — оповещение о изменениях.
+
+AppState
+Центральная модель, управляющая данными каталога, корзиной, заказом и валидацией.
 
 Методы:
 
-emitChanges(eventName: string, data?: any) — инициирует событие об изменении модели
+setCatalog(data) — установка списка товаров;
 
-AppState extends Model<IAppState>
-Центральное хранилище состояния
+setPreview(productId) — установка товара для предпросмотра;
 
-Методы:
+addToBasket(productId) — добавление в корзину;
 
-setCatalog(catalog: IProduct[])
+removeToBasket(productId) — удаление из корзины;
 
-setPreview(productId: string)
+clearBasket() — очистка корзины;
 
-addToBasket(productId: string)
+validateAddress(data) — валидация адреса;
 
-removeFromBasket(productId: string)
+validateContacts(data) — валидация контактов;
 
-clearBasket()
+getTotal() — расчет общей стоимости заказа.
 
-validateAddress(address: string): boolean
-
-validateContacts(email: string, phone: string): boolean
-
-getTotal(): number
-
-Компоненты интерфейса (View)
+Компоненты View
 Component
-Базовый UI-класс
+Базовый UI-компонент для работы с DOM.
 
 Конструктор:
 
-container: HTMLElement
+container: HTMLElement — контейнер компонента.
 
 Методы:
 
-toggleClass(className: string, force?: boolean)
+toggleClass(name, force) — добавление/удаление класса;
 
-setImage(src: string, alt: string)
+setImage(src, alt) — установка изображения;
 
-setVisible(), setHidden()
+setVisible() / setHidden() — управление видимостью;
 
-setDisabled(isDisabled: boolean)
+setDisabled(flag) — управление доступностью;
 
-render(data?: Partial<T>)
+render(data?) — отрисовка содержимого.
 
-Card extends Component
-Карточка товара
+Card
+Представляет карточку товара.
+
+Наследует: Component.
+
+Сеттеры и геттеры:
+id, title, category, image, description, price, button, index.
 
 Конструктор:
 
-container: HTMLElement
+container: HTMLElement — контейнер карточки;
 
-actions?: ICardActions
+actions?: ICardActions — объект с обработчиками событий.
 
-Сеттеры/геттеры:
+Form
+Универсальный компонент формы, обрабатывает валидацию и ошибки.
 
-id, category, title, description, price, image, button, index
-
-Form extends Component
-Общая форма (наследуется Order)
+Наследует: Component.
 
 Конструктор:
 
-container: HTMLFormElement
+container: HTMLFormElement;
 
-events: IEvents
-
-Методы:
-
-onInputChange(event: InputEvent)
-
-set valid: boolean
-
-set errors: Record<string, string>
-
-render()
-
-Order extends Form
-Форма оформления заказа
+events: IEvents.
 
 Методы:
 
-select paymentMethod(payment: TPayment)
+onInputChange() — обработка изменений;
 
-set address(string)
+set valid — установка валидности;
 
-set phone(string)
+set errors — вывод ошибок;
 
-set email(string)
+render() — перерисовка формы.
 
-Basket extends Component
-Отображает корзину
+Order
+Расширяет Form, содержит поля оплаты и контактной информации.
 
 Конструктор:
 
-container: HTMLElement
+container: HTMLElement;
 
-events: EventEmitter
+events: IEvents.
 
 Методы:
 
-set item(IProduct)
+select paymentMethod — выбор метода оплаты;
 
-set selected(boolean)
+set address, phone, email — заполнение данных.
 
-set total(number)
+Basket
+Компонент отображения корзины.
 
-Page extends Component
-Работает с главной страницей
+Наследует: Component.
 
 Конструктор:
 
-container: HTMLElement
+container: HTMLElement;
 
-events: IEvents
+events: EventEmitter.
 
-Методы:
+Сеттеры:
 
-set catalog(IProduct[])
+item — установка элементов;
 
-set counter(number)
+selected — управление отображением наличия;
 
-set locked(boolean)
+total — отображение общей суммы.
 
-Modal extends Component
-Модальное окно
+Page
+Компонент главной страницы, управляет отображением каталога и корзины.
+
+Наследует: Component.
 
 Конструктор:
 
-container: HTMLElement
+container: HTMLElement;
 
-events: IEvents
+events: IEvents.
+
+Сеттеры:
+
+catalog — отрисовка карточек;
+
+counter — счетчик товаров в корзине;
+
+locked — блокировка прокрутки.
+
+Modal
+Отвечает за отображение модального окна.
+
+Наследует: Component.
+
+Конструктор:
+
+container: HTMLElement;
+
+events: IEvents.
 
 Методы:
 
-open()
+open() / close() — управление видимостью;
 
-close()
+set content — установка содержимого;
 
-set content(HTMLElement)
-
-render()
+render() — отрисовка модального окна.
 
 Типы данных
 ts
