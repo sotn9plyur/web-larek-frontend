@@ -25,6 +25,8 @@ const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
 const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
 const deliveryTemplate = ensureElement<HTMLTemplateElement>('#order');
 const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
+const orderTemplate = ensureElement<HTMLTemplateElement>('#success');
+
 
 const appData = new AppState({}, events);
 

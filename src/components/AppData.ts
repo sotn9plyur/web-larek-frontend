@@ -109,3 +109,4 @@ export class AppState extends Model<IAppState> {
 		return Object.keys(errors).length === 0;
 	}
 }
+

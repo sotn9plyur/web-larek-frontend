@@ -25,7 +25,7 @@ export function ensureAllElements<T extends HTMLElement>(
 	if (Array.isArray(selectorElement)) {
 		return selectorElement;
 	}
-	throw new Error(`Unknown selector element`);
+	throw new Error(`Не верные данные`);
 }
 
 export type SelectorElement<T> = T | string;
@@ -37,17 +37,17 @@ export function ensureElement<T extends HTMLElement>(
 	if (isSelector(selectorElement)) {
 		const elements = ensureAllElements<T>(selectorElement, context);
 		if (elements.length > 1) {
-			console.warn(`selector ${selectorElement} return more than one element`);
+			throw new Error(`Не верные данные ${selectorElement}`);
 		}
 		if (elements.length === 0) {
-			throw new Error(`selector ${selectorElement} return nothing`);
+			throw new Error(`Не верные данные ${selectorElement}`);
 		}
 		return elements.pop() as T;
 	}
 	if (selectorElement instanceof HTMLElement) {
 		return selectorElement as T;
 	}
-	throw new Error('Unknown selector element');
+	throw new Error('Не верные данные');
 }
 
 export function cloneTemplate<T extends HTMLElement>(
@@ -125,7 +125,7 @@ export function createElement<T extends HTMLElement>(
 			if (isPlainObject(value) && key === 'dataset') {
 				setElementData(element, value);
 			} else {
-				// @ts-expect-error fix indexing later
+				// @ts-expect-error поправить позже
 				element[key] = isBoolean(value) ? value : String(value);
 			}
 		}
