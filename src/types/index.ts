@@ -6,7 +6,7 @@ export interface ApiListResponse<T> {
 }
 
 export type EventName = string | RegExp;
-export type Subscriber = (...args: any[]) => void; 
+export type Subscriber = (...args: any[]) => void;
 export interface EmitterEvent {
 	eventName: string;
 	data: unknown;
@@ -92,4 +92,8 @@ export interface IActions {
 
 export interface ISuccessActions {
 	onClick(): void;
+}
+
+export interface ISuccess {
+	total: number | null;
 }

@@ -7,48 +7,61 @@ export class ContactsForm extends Form<IContactsForm> {
 	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
 		this.container.addEventListener('submit', this.validate.bind(this));
-
 	}
 	private validate(event: Event) {
-	event.preventDefault();
-	this.clearErrors();
+		event.preventDefault();
+		this.clearErrors();
 
-	const email = this.container.elements.namedItem('email') as HTMLInputElement;
-	const phone = this.container.elements.namedItem('phone') as HTMLInputElement;
+		const email = this.container.elements.namedItem(
+			'email'
+		) as HTMLInputElement;
+		const phone = this.container.elements.namedItem(
+			'phone'
+		) as HTMLInputElement;
+		const adress = this.container.elements.namedItem(
+			'adress'
+		) as HTMLInputElement;
 
-	let valid = true;
+		let valid = true;
 
-	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-		this.showError(email, 'Неверный email');
-		valid = false;
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+			this.showError(email, 'Неверный email');
+			valid = false;
+		}
+
+		if (!/^\d{10,}$/.test(phone.value.replace(/\D/g, ''))) {
+			this.showError(phone, 'Неверный телефон');
+			valid = false;
+		}
+
+		if (!/[а-яА-Яa-zA-Z]/.test(adress.value)) {
+			this.showError(adress, 'Введите адрес');
+			valid = false;
+		}
+
+		if (valid) {
+			this.events.emit('form:submit', {
+				email: email.value,
+				phone: phone.value,
+				adress: adress.value,
+			});
+		}
 	}
 
-	if (!/^\d{10,}$/.test(phone.value.replace(/\D/g, ''))) {
-		this.showError(phone, 'Неверный телефон');
-		valid = false;
+	private showError(input: HTMLInputElement, message: string) {
+		const error = document.createElement('div');
+		error.className = 'form-error';
+		error.textContent = message;
+		input.classList.add('input-error');
+		input.closest('label')?.appendChild(error);
 	}
 
-	if (valid) {
-		this.events.emit('form:submit', {
-			email: email.value,
-			phone: phone.value,
-		});
+	private clearErrors() {
+		this.container.querySelectorAll('.form-error').forEach((e) => e.remove());
+		this.container
+			.querySelectorAll('.input-error')
+			.forEach((e) => e.classList.remove('input-error'));
 	}
-}
-
-private showError(input: HTMLInputElement, message: string) {
-	const error = document.createElement('div');
-	error.className = 'form-error';
-	error.textContent = message;
-	input.classList.add('input-error');
-	input.closest('label')?.appendChild(error);
-}
-
-private clearErrors() {
-	this.container.querySelectorAll('.form-error').forEach(e => e.remove());
-	this.container.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
-}
-
 
 	set phone(value: string) {
 		const phoneInput = this.container.elements.namedItem(

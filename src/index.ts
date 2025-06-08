@@ -6,7 +6,7 @@ import { EventEmitter } from './components/base/events';
 import { AppState, CatalogChangeEvent } from './components/AppData';
 import { Page } from './components/Page';
 import { cloneTemplate, ensureElement } from './utils/utils';
-import { Modal } from './components/common/Modal';
+import { Modal, Success } from './components/common/Modal';
 import { Basket } from './components/common/Basket';
 import { IDeliveryForm, IContactsForm, ICard } from './types';
 import { DeliveryForm, ContactsForm, PaymentMethod } from './components/Order';
@@ -26,7 +26,6 @@ const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
 const deliveryTemplate = ensureElement<HTMLTemplateElement>('#order');
 const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 const orderTemplate = ensureElement<HTMLTemplateElement>('#success');
-
 
 const appData = new AppState({}, events);
 
@@ -204,9 +203,32 @@ events.on('modal:close', () => {
 	page.locked = false;
 });
 
-api
-	.getCardList()
-	.then(appData.setCatalog.bind(appData))
-	.catch((err) => {
-		console.error(err);
+interface OrderResult {
+	total: number;
+}
+
+events.on('contacts:submit', handleOrderSubmit);
+
+function handleOrderSubmit() {
+	api.orderItems(appData.order).then(handleOrderSuccess);
+}
+
+function handleOrderSuccess(result: OrderResult) {
+	const successComponent = new Success(cloneTemplate(orderTemplate), {
+		onClick: handleSuccessClick,
 	});
+
+	successComponent.total = result.total.toString();
+
+	modal.render({
+		content: successComponent.render({}),
+	});
+}
+
+function handleSuccessClick() {
+	modal.close();
+	appData.clearBasket();
+	console.log('Работает');
+}
+
+api.getCardList().then(appData.setCatalog.bind(appData));

@@ -53,16 +53,12 @@ export class AppState extends Model<IAppState> {
 
 	setDelivery(field: keyof IDeliveryForm, value: string): void {
 		this.order[field] = value;
-		if (this.validateDelivery()) {
-			this.events.emit('delivery:ready', this.order);
-		}
+		this.events.emit('delivery:ready', this.order);
 	}
 
 	setContacts(field: keyof IContactsForm, value: string): void {
 		this.order[field] = value;
-		if (this.validateContacts()) {
-			this.events.emit('contacts:ready', this.order);
-		}
+		this.events.emit('contacts:ready', this.order);
 	}
 
 	setCatalog(items: ICard[]): void {
@@ -74,39 +70,4 @@ export class AppState extends Model<IAppState> {
 		this.preview = item.id;
 		this.emitChanges('preview:changed', item);
 	}
-
-	private validateDelivery(): boolean {
-		const errors: FormErrors = {};
-
-		if (!this.order.address) {
-			errors.address = 'Необходимо указать адрес доставки';
-		}
-
-		this.updateFormErrors(errors);
-		return this.isValid(errors);
-	}
-
-	private validateContacts(): boolean {
-		const errors: FormErrors = {};
-
-		if (!this.order.email) {
-			errors.email = 'Необходимо указать email';
-		}
-		if (!this.order.phone) {
-			errors.phone = 'Необходимо указать телефон';
-		}
-
-		this.updateFormErrors(errors);
-		return this.isValid(errors);
-	}
-
-	private updateFormErrors(errors: FormErrors): void {
-		this.formErrors = errors;
-		this.events.emit('formErrors:change', this.formErrors);
-	}
-
-	private isValid(errors: FormErrors): boolean {
-		return Object.keys(errors).length === 0;
-	}
 }
-
