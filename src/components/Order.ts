@@ -6,54 +6,79 @@ import { ensureElement } from '../utils/utils';
 export class ContactsForm extends Form<IContactsForm> {
 	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
+
+		this.container.addEventListener('input', this.validate.bind(this));
 		this.container.addEventListener('submit', this.validate.bind(this));
 	}
+
 	private validate(event: Event) {
 		event.preventDefault();
 		this.clearErrors();
 
 		const email = this.container.elements.namedItem(
 			'email'
-		) as HTMLInputElement;
+		) as HTMLInputElement | null;
 		const phone = this.container.elements.namedItem(
 			'phone'
-		) as HTMLInputElement;
-		const adress = this.container.elements.namedItem(
-			'adress'
-		) as HTMLInputElement;
+		) as HTMLInputElement | null;
+		const address = this.container.elements.namedItem(
+			'address'
+		) as HTMLInputElement | null;
 
 		let valid = true;
 
-		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-			this.showError(email, 'Неверный email');
+		const emailRegex = /^[a-zA-Z]+@[a-zA-Z]+\.[a-zA-Z]+$/;
+		if (!email || !emailRegex.test(email.value)) {
+			if (email) this.showError(email, 'Неверный email');
 			valid = false;
 		}
 
-		if (!/^\d{10,}$/.test(phone.value.replace(/\D/g, ''))) {
-			this.showError(phone, 'Неверный телефон');
+		const digitsOnly = phone?.value.replace(/[^\d]/g, '');
+		if (
+			!phone ||
+			!/^\+?\d+$/.test(phone.value) ||
+			(digitsOnly?.length ?? 0) < 10
+		) {
+			if (phone) this.showError(phone, 'Неверный телефон');
 			valid = false;
 		}
 
-		if (!/[а-яА-Яa-zA-Z]/.test(adress.value)) {
-			this.showError(adress, 'Введите адрес');
+		if (
+			!address ||
+			!/[a-zA-Zа-яА-Я]/.test(address.value) ||
+			!/\d/.test(address.value)
+		) {
+			if (address) this.showError(address, 'Неверный адрес');
 			valid = false;
 		}
 
-		if (valid) {
+		const submitButton = this.container.querySelector(
+			'button[type="submit"]'
+		) as HTMLButtonElement | null;
+		if (submitButton) {
+			submitButton.disabled = !valid;
+		}
+
+		if (valid && email && phone && address && event.type === 'submit') {
 			this.events.emit('form:submit', {
 				email: email.value,
 				phone: phone.value,
-				adress: adress.value,
+				address: address.value,
 			});
 		}
 	}
 
 	private showError(input: HTMLInputElement, message: string) {
-		const error = document.createElement('div');
-		error.className = 'form-error';
-		error.textContent = message;
+		const label = input.closest('label') || input.parentElement;
+
+		if (label) {
+			const error = document.createElement('div');
+			error.className = 'form-error';
+			error.textContent = message;
+			label.appendChild(error);
+		}
+
 		input.classList.add('input-error');
-		input.closest('label')?.appendChild(error);
 	}
 
 	private clearErrors() {
@@ -64,15 +89,15 @@ export class ContactsForm extends Form<IContactsForm> {
 	}
 
 	set phone(value: string) {
-		const phoneInput = this.container.elements.namedItem(
-			'phone'
+		const phoneInput = this.container.querySelector(
+			'[name="phone"]'
 		) as HTMLInputElement | null;
 		if (phoneInput) phoneInput.value = value;
 	}
 
 	set email(value: string) {
-		const emailInput = this.container.elements.namedItem(
-			'email'
+		const emailInput = this.container.querySelector(
+			'[name="email"]'
 		) as HTMLInputElement | null;
 		if (emailInput) emailInput.value = value;
 	}
@@ -108,8 +133,8 @@ export class DeliveryForm extends Form<IDeliveryForm> {
 	}
 
 	set address(value: string) {
-		const addressInput = this.container.elements.namedItem(
-			'address'
+		const addressInput = this.container.querySelector(
+			'[name="address"]'
 		) as HTMLInputElement | null;
 		if (addressInput) addressInput.value = value;
 	}

@@ -93,7 +93,3 @@ export interface IActions {
 export interface ISuccessActions {
 	onClick(): void;
 }
-
-export interface ISuccess {
-	total: number | null;
-}

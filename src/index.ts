@@ -228,7 +228,6 @@ function handleOrderSuccess(result: OrderResult) {
 function handleSuccessClick() {
 	modal.close();
 	appData.clearBasket();
-	console.log('Работает');
 }
 
 api.getCardList().then(appData.setCatalog.bind(appData));

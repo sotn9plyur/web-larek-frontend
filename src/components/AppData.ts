@@ -6,6 +6,8 @@ import {
 	IDeliveryForm,
 	IContactsForm,
 	ICard,
+	
+	
 } from '../types';
 
 export type CatalogChangeEvent = {
