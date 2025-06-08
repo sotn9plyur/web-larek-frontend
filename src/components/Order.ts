@@ -15,40 +15,20 @@ export class ContactsForm extends Form<IContactsForm> {
 		event.preventDefault();
 		this.clearErrors();
 
-		const email = this.container.elements.namedItem(
-			'email'
-		) as HTMLInputElement | null;
-		const phone = this.container.elements.namedItem(
-			'phone'
-		) as HTMLInputElement | null;
-		const address = this.container.elements.namedItem(
-			'address'
-		) as HTMLInputElement | null;
+		const email = this.container.elements.namedItem('email') as HTMLInputElement | null;
+		const phone = this.container.elements.namedItem('phone') as HTMLInputElement | null;
 
 		let valid = true;
 
-		const emailRegex = /^[a-zA-Z]+@[a-zA-Z]+\.[a-zA-Z]+$/;
+		const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 		if (!email || !emailRegex.test(email.value)) {
 			if (email) this.showError(email, 'Неверный email');
 			valid = false;
 		}
 
 		const digitsOnly = phone?.value.replace(/[^\d]/g, '');
-		if (
-			!phone ||
-			!/^\+?\d+$/.test(phone.value) ||
-			(digitsOnly?.length ?? 0) < 10
-		) {
+		if (!phone || (digitsOnly?.length ?? 0) < 10) {
 			if (phone) this.showError(phone, 'Неверный телефон');
-			valid = false;
-		}
-
-		if (
-			!address ||
-			!/[a-zA-Zа-яА-Я]/.test(address.value) ||
-			!/\d/.test(address.value)
-		) {
-			if (address) this.showError(address, 'Неверный адрес');
 			valid = false;
 		}
 
@@ -59,11 +39,10 @@ export class ContactsForm extends Form<IContactsForm> {
 			submitButton.disabled = !valid;
 		}
 
-		if (valid && email && phone && address && event.type === 'submit') {
+		if (valid && email && phone && event.type === 'submit') {
 			this.events.emit('form:submit', {
 				email: email.value,
 				phone: phone.value,
-				address: address.value,
 			});
 		}
 	}
@@ -89,16 +68,12 @@ export class ContactsForm extends Form<IContactsForm> {
 	}
 
 	set phone(value: string) {
-		const phoneInput = this.container.querySelector(
-			'[name="phone"]'
-		) as HTMLInputElement | null;
+		const phoneInput = this.container.querySelector('[name="phone"]') as HTMLInputElement | null;
 		if (phoneInput) phoneInput.value = value;
 	}
 
 	set email(value: string) {
-		const emailInput = this.container.querySelector(
-			'[name="email"]'
-		) as HTMLInputElement | null;
+		const emailInput = this.container.querySelector('[name="email"]') as HTMLInputElement | null;
 		if (emailInput) emailInput.value = value;
 	}
 }
@@ -115,14 +90,8 @@ export class DeliveryForm extends Form<IDeliveryForm> {
 	constructor(container: HTMLFormElement, events: IEvents, actions: IActions) {
 		super(container, events);
 
-		this._cardButton = ensureElement<HTMLButtonElement>(
-			'button[name="card"]',
-			this.container
-		);
-		this._cashButton = ensureElement<HTMLButtonElement>(
-			'button[name="cash"]',
-			this.container
-		);
+		this._cardButton = ensureElement<HTMLButtonElement>('button[name="card"]', this.container);
+		this._cashButton = ensureElement<HTMLButtonElement>('button[name="cash"]', this.container);
 
 		this._cardButton.classList.add('button_alt-active');
 
@@ -133,9 +102,7 @@ export class DeliveryForm extends Form<IDeliveryForm> {
 	}
 
 	set address(value: string) {
-		const addressInput = this.container.querySelector(
-			'[name="address"]'
-		) as HTMLInputElement | null;
+		const addressInput = this.container.querySelector('[name="address"]') as HTMLInputElement | null;
 		if (addressInput) addressInput.value = value;
 	}
 
