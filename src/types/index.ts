@@ -6,7 +6,7 @@ export interface ApiListResponse<T> {
 }
 
 export type EventName = string | RegExp;
-export type Subscriber = (...args: any[]) => void; // Чуть точнее, чем Function
+export type Subscriber = (...args: any[]) => void; 
 export interface EmitterEvent {
 	eventName: string;
 	data: unknown;
