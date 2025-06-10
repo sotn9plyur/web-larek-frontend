@@ -1,5 +1,6 @@
 import { Component } from './common/Component';
 import { ICard, IActions } from '../types';
+import { settings } from '../utils/constants';
 
 export class Card extends Component<ICard> {
 	protected _title: HTMLElement | null;
@@ -87,13 +88,28 @@ export class Card extends Component<ICard> {
 	}
 
 	set category(value: string) {
-		this.setText(this._category, value);
+		if (!this._category) return;
+
+		this._category.textContent = value;
+
+		this._category.classList.forEach((cls) => {
+			if (cls.startsWith('card__category_')) {
+				this._category!.classList.remove(cls);
+			}
+		});
+
+		const mappedClass = settings[value] ?? 'other';
+		this._category.classList.add(`card__category_${mappedClass}`);
 	}
 
 	set price(value: number | null) {
 		if (this._price) {
-			this._price.textContent =
-				value === null ? 'Бесценно' : `${value} синапсов`;
+			const isFree = value === null;
+			this._price.textContent = isFree ? 'Бесценно' : `${value} синапсов`;
+
+			if (this._button) {
+				this._button.disabled = isFree;
+			}
 		}
 	}
 

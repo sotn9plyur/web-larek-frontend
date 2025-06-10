@@ -1,75 +1,105 @@
 import { Model } from './common/Model';
 import {
-	IAppState,
-	IOrderForm,
-	FormErrors,
-	IDeliveryForm,
-	IContactsForm,
-	ICard,
-	
-	
+    IAppState,
+    IOrderForm,
+    FormErrors,
+    IDeliveryForm,
+    IContactsForm,
+    ICard,
+    IOrderData
 } from '../types';
 
 export type CatalogChangeEvent = {
-	catalog: ICard[];
+    catalog: ICard[];
 };
 
 export class AppState extends Model<IAppState> {
-	basket: ICard[] = [];
-	catalog: ICard[];
-	order: IOrderForm = {
-		payment: 'online',
-		address: '',
-		email: '',
-		phone: '',
-		total: 0,
-		items: [],
-	};
-	preview: string | null = null;
-	formErrors: FormErrors = {};
+    basket: ICard[] = [];
+    catalog: ICard[] = [];
+    order: IOrderForm = {
+        payment: 'online',
+        address: '',
+        email: '',
+        phone: '',
+    };
+    preview: string | null = null;
+    formErrors: FormErrors = {};
 
-	addToBasket(item: ICard): void {
-		if (item.price !== null && !this.basket.includes(item)) {
-			this.basket.push(item);
-			this.emitBasketChanges();
-		}
-	}
+    addToBasket(item: ICard) {
+        if (item.price !== null && !this.basket.includes(item)) {
+            this.basket.push(item);
+            this.emitChanges('count:changed', this.basket);
+            this.emitChanges('basket:changed', this.basket);
+        }
+    }
 
-	removeFromBasket(item: ICard): void {
-		const index = this.basket.indexOf(item);
-		if (index !== -1) {
-			this.basket.splice(index, 1);
-			this.emitBasketChanges();
-		}
-	}
+    removeFromBasket(item: ICard) {
+        const index = this.basket.indexOf(item);
+        if (index !== -1) {
+            this.basket.splice(index, 1);
+            this.emitChanges('count:changed', this.basket);
+            this.emitChanges('basket:changed', this.basket);
+        }
+    }
 
-	clearBasket(): void {
-		this.basket = [];
-		this.emitBasketChanges();
-	}
+    clearBasket() {
+        this.basket = [];
+        this.emitChanges('count:changed', this.basket);
+        this.emitChanges('basket:changed', this.basket);
+    }
 
-	private emitBasketChanges(): void {
-		this.emitChanges('count:changed', this.basket);
-		this.emitChanges('basket:changed', this.basket);
-	}
+    setDelivery(field: keyof IDeliveryForm, value: string) {
+        this.order[field] = value;
+        this.validateDelivery();
+    }
 
-	setDelivery(field: keyof IDeliveryForm, value: string): void {
-		this.order[field] = value;
-		this.events.emit('delivery:ready', this.order);
-	}
+    setContacts(field: keyof IContactsForm, value: string) {
+        this.order[field] = value;
+        this.validateContacts();
+    }
 
-	setContacts(field: keyof IContactsForm, value: string): void {
-		this.order[field] = value;
-		this.events.emit('contacts:ready', this.order);
-	}
+    setCatalog(items: ICard[]) {
+        this.catalog = items;
+        this.emitChanges('items:changed', { catalog: this.catalog });
+    }
 
-	setCatalog(items: ICard[]): void {
-		this.catalog = items;
-		this.emitChanges('items:changed', { catalog: this.catalog });
-	}
+    setPreview(item: ICard) {
+        this.preview = item.id;
+        this.emitChanges('preview:changed', item);
+    }
 
-	setPreview(item: ICard): void {
-		this.preview = item.id;
-		this.emitChanges('preview:changed', item);
-	}
+    validateDelivery() {
+        const errors: typeof this.formErrors = {};
+        if (!this.order.address) {
+            errors.address = 'Неверный адрес';
+        }
+        this.formErrors = errors;
+        this.events.emit('formErrors:change', this.formErrors);
+        return Object.keys(errors).length === 0;
+    }
+
+    validateContacts() {
+        const errors: typeof this.formErrors = {};
+        if (!this.order.email) {
+            errors.email = 'Неверный email';
+        }
+        if (!this.order.phone) {
+            errors.phone = 'Неверный телефон';
+        }
+        this.formErrors = errors;
+        this.events.emit('formErrors:change', this.formErrors);
+        return Object.keys(errors).length === 0;
+    }
+
+    getOrderData(): IOrderData {
+        return {
+            ...this.order,
+            items: this.basket.map(item => item.id),
+            total: this.getTotal()
+        };
+    }
+
+    getTotal(): number {
+        return this.basket.reduce((sum, item) => sum + (item.price || 0), 0);
+    }
 }

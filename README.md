@@ -28,74 +28,259 @@ npm run build
 или
 
 yarn build
-Архитектура проекта Архитектура построена по паттерну MVP (Model-View-Presenter):
+Конечно! Вот слегка изменённая версия твоего описания архитектуры, чтобы оно сохраняло тот же смысл, но выглядело по-другому:
 
-Model — классы Model и AppState, управляющие данными: получение, обновление и хранение состояния приложения.
+---
 
-View — классы компонентов UI: Card, Component, Order, Form, Basket, Page, которые отвечают за отрисовку и взаимодействие с пользователем.
+MVP-архитектура
 
-Presenter — слой посредник между Model и View, осуществляет логику передачи данных и управления состояниями.
+Проект реализован с применением архитектурного паттерна MVP (Model-View-Presenter), который разбивает приложение на три ключевые компоненты:
 
-Вся коммуникация между компонентами и состоянием происходит через систему событий (EventEmitter). Модель генерирует события, на которые подписываются презентеры и компоненты отображения, обеспечивая реактивное обновление интерфейса.
+Model — отвечает за управление данными и реализацию бизнес-логики. Здесь происходит загрузка, обновление и удаление данных, а также все необходимые вычисления.
+View — отвечает за пользовательский интерфейс. Обеспечивает отображение данных, реагирует на действия пользователя (клики, заполнение форм и т. д.) и выполняет валидацию.
+Presenter — выступает связующим звеном между моделью и представлением. Он обрабатывает пользовательские действия и обновляет интерфейс в ответ на изменения данных.
 
-Основные классы и их функции EventEmitter Брокер событий, позволяющий подписываться, снимать подписки и генерировать события.
+---
 
-Методы: on, off, onAll, offAll, emit, trigger.
+Базовые классы
 
-API Базовый класс для общения с сервером.
+EventEmitter
+Общий класс-наблюдатель, позволяющий генерировать события и подписываться на них. Это облегчает взаимодействие между различными частями приложения через событийную модель.
 
-Методы: get, post, handleResponse.
+Основной функционал:
 
-Используется для получения каталога товаров и отправки заказов.
+`on(event, handler)` — подписка на событие.
+`off(event, handler)` — удаление обработчика события.
+`emit(event, data)` — вызов события с данными.
+`onAll(handler)` — подписка на все события.
+`offAll(handler)` — удаление универсальной подписки.
+`trigger(name, callback)` — связывает вызов коллбэка с определённым событием.
 
-Model Управляет данными и событиями.
+Api
+Базовый модуль для работы с HTTP-запросами к серверу. Поддерживает стандартные методы взаимодействия: GET, POST, PUT, DELETE.
 
-Имеет метод emitChanges для оповещения о изменениях данных.
+Методы:
 
-AppState Центральная модель состояния.
+`handleResponse(response)` — обрабатывает ответ, преобразуя его в JSON или выбрасывает ошибку.
+`get(url)` — отправка GET-запроса.
+`post(url, data, method)` — универсальный метод для POST/PUT/DELETE-запросов.
 
-Хранит каталог товаров, корзину, предпросмотр, данные заказа и ошибки валидации.
+Model
+Родительский класс для всех моделей данных, управляющий логикой и хранением состояния.
 
-Методы для изменения состояния: setCatalog, setPreview, addToBasket, removeToBasket, clearBasket, validateAddress, validateContacts, getTotal.
+Методы:
 
-Component Базовый UI-компонент.
+`emitChanges()` — уведомляет подписчиков об изменениях в модели.
 
-Методы работы с DOM: toggleClass, setImage, setVisible, setHidden, setDisabled, render.
+Component
+Базовая сущность для UI-компонентов, обеспечивающая управление DOM-элементами и визуальной логикой.
 
-Card Карточка товара.
+Основные методы:
 
-Свойства: id, category, title, image, description, price, button, index.
+`toggleClass(className)` — переключает CSS-класс.
+`setText(text)` — устанавливает текстовый контент.
+`setDisabled(state)` — блокирует/разблокирует элемент.
+`setHidden()` — скрывает компонент.
+`setVisible()` — делает компонент видимым.
+`setImage(src, alt)` — задаёт изображение и альтернативный текст.
+`render()` — возвращает DOM-элемент компонента.
 
-Позволяет отображать товар и реагировать на действия пользователя.
+---
 
-Form Базовый класс для управления формами.
+Класс `AppState`
 
-Обрабатывает ввод, валидацию и отображение ошибок.
+Класс, управляющий глобальным состоянием приложения. Хранит данные, необходимые различным компонентам, и предоставляет методы для их изменения и валидации.
 
-Order Наследует Form.
+Основные методы:
 
-Управляет формами оплаты, контактами и адресом.
+`addToBasket(item: IProductItem)` — добавляет товар в корзину.
+`removeFromBasket(item: IProductItem)` — удаляет товар из корзины.
+`clearBasket()` — полностью очищает корзину.
+`setDelivery(data: IDeliveryForm)` — сохраняет информацию о доставке.
+`setContacts(data: IContactsForm)` — сохраняет контактные данные пользователя.
+`setCatalog(items: IProductItem[])` — устанавливает список товаров.
+`setPreview(id: string | null)` — сохраняет ID выбранного товара для предпросмотра.
+`validateDelivery(): IFormState` — проверяет валидность формы доставки.
+`validateContacts(): IFormState` — проверяет валидность контактной формы.
 
-Basket Управляет отображением и состоянием корзины.
+Используемый тип:
 
-Свойства: item, selected, total.
+interface IAppState {
+	catalog: IProductItem[];
+	basket: IProductItem[];
+	preview: string | null;
+	contact: IContactsForm | null;
+	delivery: IDeliveryForm | null;
+	order: IOrderForm | null;
+}
 
-Page Контролирует главный интерфейс: каталог товаров, счетчик в корзине, блокировку прокрутки.
+Компоненты представления
 
-Modal Отвечает за модальное окно: открытие, закрытие, отображение содержимого.
+`ContactsForm`
 
-Типы данных (TypeScript) typescript Копировать Редактировать export type TProductCategory = 'софт-скил' | 'другое' | 'дополнительное' | 'кнопка' | 'хард-скил';
+Компонент, отвечающий за отображение и обработку формы контактных данных. Используется при оформлении заказа. Наследуется от `Component`.
 
-export type TPayment = 'онлайн' | 'при получении';
 
-export interface IProduct { id: string; category: TProductCategory; title: string; description: string; price: number | null; image?: string; }
+interface IContactsForm {
+	email: string;
+	phone: string;
+}
 
-export interface IProductOrder { item: IProduct; total: number; }
+`DeliveryForm`
 
-export interface IOrderForm { payment: TPayment; address: string; email: string; phone: string; }
+Управляет вводом и выбором данных, связанных с доставкой заказа. Также основан на `Component`.
 
-export interface IBasket { item: IProduct; price: number; total: number; }
 
-export interface IOrderSuccess { id: string; total: number; }
+interface IDeliveryForm {
+	payment: string;
+	address: string;
+}
 
-export interface IAppState { catalog: IProduct[]; basket: string[]; preview: string | null; order: IOrderForm | null; }
+`Page`
+
+Отображает основную страницу магазина: список товаров и корзину. Является корневым визуальным компонентом. Наследуется от `Component`.
+
+interface IPage {
+	counter: number;
+	catalog: HTMLElement[];
+	locked: boolean;
+}
+
+`Card`
+
+Представляет собой UI-компонент товарной карточки с данными о товаре и кнопкой действия. Расширяет интерфейс `IProductItem`.
+
+
+interface ICard extends IProductItem {
+	count?: string;
+	buttonText?: string;
+}
+
+`Basket`
+
+Компонент для отображения содержимого корзины, подсчёта суммы заказа и визуализации добавленных товаров. Наследуется от `Component`.
+
+interface IBasketView {
+	items: HTMLElement[];
+	total: number;
+}
+
+`Modal`
+
+Компонент модального окна, отображающий произвольный HTML-контент. Используется для предпросмотра и подтверждений.
+
+
+interface IModalData {
+	content: HTMLElement;
+}
+
+`Success`
+
+Отвечает за отображение информации об успешной покупке. Выводит итоговую сумму заказа. Наследуется от `Component`.
+
+
+interface ISuccess {
+	total: number | null;
+}
+
+---
+
+Типы данных
+
+export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
+
+export interface ApiListResponse<T> {
+	total: number;
+	items: T[];
+}
+
+export type EventName = string | RegExp;
+export type Subscriber = (...args: any[]) => void;
+export interface EmitterEvent {
+	eventName: string;
+	data: unknown;
+}
+
+export interface IProductItem {
+	id: string;
+	title: string;
+	description?: string;
+	image?: string;
+	category: string;
+	price: number | null;
+}
+
+export interface IAppState {
+	catalog: IProductItem[];
+	basket: IProductItem[];
+	preview: string | null;
+	contact: IContactsForm | null;
+	delivery: IDeliveryForm | null;
+	order: IOrderForm | null;
+}
+
+export interface IContactsForm {
+	email: string;
+	phone: string;
+}
+
+export interface IDeliveryForm {
+	payment: string;
+	address: string;
+}
+
+export interface IOrderForm extends IContactsForm, IDeliveryForm {}
+
+export interface IOrderData extends IOrderForm {
+	items: string[];
+	total: number;
+}
+
+export interface IOrderResult {
+	id: string;
+	total: number;
+}
+
+export interface IPage {
+	counter: number;
+	catalog: HTMLElement[];
+	locked: boolean;
+}
+
+export interface ICard extends IProductItem {
+	count?: string;
+	buttonText?: string;
+}
+
+export interface ISuccess {
+	total: number | null;
+}
+
+export interface IBasketView {
+	items: HTMLElement[];
+	total: number;
+}
+
+export interface IFormState {
+	valid: boolean;
+	errors: string[];
+}
+
+export type FormErrors = Partial<Record<keyof IOrderForm, string>>;
+
+export interface IModalData {
+	content: HTMLElement;
+}
+
+export interface ILarekAPI {
+	getCardList(): Promise<ICard[]>;
+	orderItems(order: IOrderForm): Promise<IOrderResult>;
+}
+
+export interface IActions {
+	onClick(event: MouseEvent): void;
+}
+
+export interface ISuccessActions {
+	onClick(): void;
+}

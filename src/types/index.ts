@@ -40,9 +40,11 @@ export interface IDeliveryForm {
 	address: string;
 }
 
-export interface IOrderForm extends IContactsForm, IDeliveryForm {
-	total: number;
+export interface IOrderForm extends IContactsForm, IDeliveryForm {}
+
+export interface IOrderData extends IOrderForm {
 	items: string[];
+	total: number;
 }
 
 export interface IOrderResult {
